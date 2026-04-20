@@ -6,17 +6,16 @@
 - [GROUP_NAME]: BanZ
 - [REPO_URL]: https://github.com/FWD-LeTung/BanZ-C401-Day13
 - [MEMBERS]:
-  - Member A: LeTung | Role: Logging & PII Scrubbing
-  - Member B: thanhthuong194 | Role: Tracing & Enrichment
-  - Member C: Sitito | Role: SLO & Alert Configuration
-  - Member D: DinhThaiTuan | Role: Testing, Audit Logging & PII Bug Fix
-  - Member E: (Unassigned) | Role: RCA & Demo Lead
+  - Member A: Le Van Tung | Role: Logging & PII Scrubbing
+  - Member B: Le Thanh Thuong | Role: Tracing & Enrichment
+  - Member C: Dinh Thai Tuan | Role: Testing, Audit Logging & PII Bug Fix
+  - Member D: Nguyen Duc Si | Role: SLO & Alert Configuration
 
 ---
 
 ## 2. Group Performance (Auto-Verified)
 - [VALIDATE_LOGS_FINAL_SCORE]: 80/100
-- [TOTAL_TRACES_COUNT]: Pending live verification
+- [TOTAL_TRACES_COUNT]: 23
 - [PII_LEAKS_FOUND]: 0
 
 ---
@@ -69,22 +68,18 @@
 
 ## 5. Individual Contributions & Evidence
 
-### LeTung (Member A)
-- [TASKS_COMPLETED]: Middleware correlation ID implementation, PII scrubbing patterns, structlog configuration with JSON file processor, scrub_event processor, initial project setup
-- [EVIDENCE_LINK]: Commits `232ea70` (middleware, PII, sub_event) and `85d6db3` (initial commit)
+### Le Van Tung (Member A)
+- [TASKS_COMPLETED]: Middleware correlation ID implementation (`app/middleware.py`), PII scrubbing patterns (`app/pii.py`), structlog configuration with JSON file processor and scrub_event processor (`app/logging_config.py`), initial project setup
+- [EVIDENCE_LINK]: Commits `232ea70` (middleware, PII, sub_event) and `85d6db3` (initial commit) — PR #1
 
-### thanhthuong194 (Member B)
-- [TASKS_COMPLETED]: Enriched logging context with `bind_contextvars` (user_id_hash, session_id, feature, model, env), tracing metadata via `langfuse_context.update_current_trace/observation`
-- [EVIDENCE_LINK]: Commit `96b092a` (feat: enrich logging context and tracing metadata)
+### Le Thanh Thuong (Member B)
+- [TASKS_COMPLETED]: Enriched logging context with `bind_contextvars` (user_id_hash, session_id, feature, model, env), tracing metadata via `langfuse_context.update_current_trace/observation`, verified 23 traces on Langfuse
+- [EVIDENCE_LINK]: Commit `96b092a` (feat: enrich logging context and tracing metadata) — PR #3
 
-### Sitito (Member C)
-- [TASKS_COMPLETED]: SLO configuration (`config/slo.yaml`), alert rules (`config/alert_rules.yaml`), alert runbooks (`docs/alerts.md`), dashboard spec (`docs/dashboard-spec.md`), test data enrichment
-- [EVIDENCE_LINK]: Commit `4fdb1e7` (data test) — PR #2
-
-### DinhThaiTuan (Member D)
+### Dinh Thai Tuan (Member C)
 - [TASKS_COMPLETED]: 
   - Implemented audit logging system (`write_audit_log` in `logging_config.py`) with separate audit trail in `data/audit.jsonl`
-  - Integrated audit log calls into chat endpoint (`app/main.py`): request, response, and error events
+  - Integrated audit log calls into all endpoints (`app/main.py`): chat request/response/error + incident enable/disable
   - Fixed PII regex bug: `phone_vn` pattern with `+84` prefix was incorrectly matched by `bank_account` due to `\b` word boundary not matching before `+`
   - Expanded test suite from 2 tests to 39 tests covering all modules:
     - `test_pii.py`: 13 tests (email, phone, credit card, passport, summarize, hash)
@@ -94,7 +89,12 @@
     - `test_incidents.py`: 5 tests (enable, disable, unknown key, status)
     - `test_schemas.py`: 3 tests (valid request, empty message rejection, response fields)
     - `test_mock_rag.py`: 4 tests (category matching, fallback, tool_fail error)
-- [EVIDENCE_LINK]: See latest commits on current branch
+  - Filled in blueprint report, wrote individual reports for all 4 members
+- [EVIDENCE_LINK]: Commit `c75a95f` — PR `feat/testing-audit-pii-fix`
+
+### Nguyen Duc Si (Member D)
+- [TASKS_COMPLETED]: SLO configuration (`config/slo.yaml`) with 4 SLIs, alert rules (`config/alert_rules.yaml`) with 3 alerts, alert runbooks (`docs/alerts.md`), dashboard spec (`docs/dashboard-spec.md`), test data enrichment (`data/sample_queries.jsonl`, `data/expected_answers.jsonl`)
+- [EVIDENCE_LINK]: Commit `4fdb1e7` (data test) — PR #2
 
 ---
 
