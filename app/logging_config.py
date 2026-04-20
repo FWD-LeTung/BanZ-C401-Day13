@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +13,7 @@ from structlog.contextvars import merge_contextvars
 from .pii import scrub_text
 
 LOG_PATH = Path(os.getenv("LOG_PATH", "data/logs.jsonl"))
+AUDIT_LOG_PATH = Path(os.getenv("AUDIT_LOG_PATH", "data/audit.jsonl"))
 
 
 class JsonlFileProcessor:
@@ -32,6 +35,25 @@ def scrub_event(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     if "event" in event_dict and isinstance(event_dict["event"], str):
         event_dict["event"] = scrub_text(event_dict["event"])
     return event_dict
+
+
+def write_audit_log(
+    action: str,
+    *,
+    correlation_id: str | None = None,
+    user_id_hash: str | None = None,
+    detail: dict[str, Any] | None = None,
+) -> None:
+    AUDIT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "audit_action": action,
+        "correlation_id": correlation_id,
+        "user_id_hash": user_id_hash,
+        "detail": detail or {},
+    }
+    with AUDIT_LOG_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record) + "\n")
 
 
 

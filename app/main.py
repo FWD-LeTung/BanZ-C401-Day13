@@ -8,7 +8,7 @@ from structlog.contextvars import bind_contextvars
 
 from .agent import LabAgent
 from .incidents import disable, enable, status
-from .logging_config import configure_logging, get_logger
+from .logging_config import configure_logging, get_logger, write_audit_log
 from .metrics import record_error, snapshot
 from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
@@ -44,8 +44,10 @@ async def metrics() -> dict:
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest) -> ChatResponse:
+    uid_hash = hash_user_id(body.user_id)
+    cid = request.state.correlation_id
     bind_contextvars(
-        user_id_hash=hash_user_id(body.user_id),
+        user_id_hash=uid_hash,
         session_id=body.session_id,
         feature=body.feature,
         model=agent.model,
@@ -56,6 +58,12 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
         "request_received",
         service="api",
         payload={"message_preview": summarize_text(body.message)},
+    )
+    write_audit_log(
+        "chat_request",
+        correlation_id=cid,
+        user_id_hash=uid_hash,
+        detail={"feature": body.feature, "session_id": body.session_id},
     )
     try:
         result = agent.run(
@@ -73,9 +81,19 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             cost_usd=result.cost_usd,
             payload={"answer_preview": summarize_text(result.answer)},
         )
+        write_audit_log(
+            "chat_response",
+            correlation_id=cid,
+            user_id_hash=uid_hash,
+            detail={
+                "latency_ms": result.latency_ms,
+                "cost_usd": result.cost_usd,
+                "quality_score": result.quality_score,
+            },
+        )
         return ChatResponse(
             answer=result.answer,
-            correlation_id=request.state.correlation_id,
+            correlation_id=cid,
             latency_ms=result.latency_ms,
             tokens_in=result.tokens_in,
             tokens_out=result.tokens_out,
@@ -91,6 +109,12 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             error_type=error_type,
             payload={"detail": str(exc), "message_preview": summarize_text(body.message)},
         )
+        write_audit_log(
+            "chat_error",
+            correlation_id=cid,
+            user_id_hash=uid_hash,
+            detail={"error_type": error_type},
+        )
         raise HTTPException(status_code=500, detail=error_type) from exc
 
 
@@ -99,6 +123,7 @@ async def enable_incident(name: str) -> JSONResponse:
     try:
         enable(name)
         log.warning("incident_enabled", service="control", payload={"name": name})
+        write_audit_log("incident_enabled", detail={"name": name})
         return JSONResponse({"ok": True, "incidents": status()})
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -109,6 +134,7 @@ async def disable_incident(name: str) -> JSONResponse:
     try:
         disable(name)
         log.warning("incident_disabled", service="control", payload={"name": name})
+        write_audit_log("incident_disabled", detail={"name": name})
         return JSONResponse({"ok": True, "incidents": status()})
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
