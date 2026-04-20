@@ -5,13 +5,13 @@ import re
 
 PII_PATTERNS: dict[str, str] = {
     "email": r"[\w\.-]+@[\w\.-]+\.\w+",
-    "cccd": r"\b\d{12}\b",  # Must be before phone/bank to avoid partial matches
+    "cccd": r"\b\d{12}\b",
     "credit_card": r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b",
-    "phone_vn": r"\b(?:\+84|0)\d{9,10}\b", # 0901234567, +84901234567
-    "passport": r"\b[A-Z]{1,2}\d{7,8}\b", # A1234567, AB12345678
-    "bank_account": r"\b\d{9,12}\b", # 9-12 consecutive digits (avoid 8-digit conflicts)
-    "vn_address": r"(?:duong|pho|quan|huyen|tp|thanh\s*pho|so\s*nha|thon|xa|ap|to)\s+[^\s,]+", # Vietnamese address keywords
-    "zip_code": r"\b\d{5,6}\b", # Zip/postal codes
+    "phone_vn": r"(?:\+84|0)\d{9,10}\b",
+    "passport": r"\b[A-Z]{1,2}\d{7,8}\b",
+    "bank_account": r"\b\d{9,12}\b",
+    "vn_address": r"(?:duong|pho|quan|huyen|tp|thanh\s*pho|so\s*nha|thon|xa|ap|to)\s+[^\s,]+",
+    "zip_code": r"\b\d{5,6}\b",
 }
 
 
